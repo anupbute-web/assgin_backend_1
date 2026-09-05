@@ -7,7 +7,14 @@ const jwt = require("jsonwebtoken");
 
 const app = express();
 app.use(cors());
-app.use(express.json({ limit: "128kb" })); 
+app.use(express.json({ limit: "128kb" }));
+app.use((err,req,res,next)=>{
+    if(err instanceof SyntaxError && er.status == 413 || err.type === 'entity.too.large'){
+        console.log(err)
+        return res.status(413).json({ message: "File size is larger than 128kb." })
+    }
+    next();
+})
 
 mongoose
   .connect(process.env.MONGODB_URL)
@@ -114,6 +121,8 @@ app.post("/api/posts", verifyToken, async (req, res) => {
     if (!text && !image)
       return res.status(400).json({ message: "Post must have text or image" });
 
+    console.log(String(image))
+
     const newPost = new Post({
       userId: req.user.id,
       username: req.user.username,
@@ -123,6 +132,7 @@ app.post("/api/posts", verifyToken, async (req, res) => {
     await newPost.save();
     res.status(201).json(newPost);
   } catch (error) {
+    console.log({error:error})
     res.status(500).json({ error: error.message });
   }
 });
