@@ -192,4 +192,23 @@ app.post("/api/posts/:id/comment", verifyToken, async (req, res) => {
   }
 });
 
+app.get("/api/health",(req,res)=>{
+    res.json({success:true});
+})
+
+const API_URL = "https://assgin-backend-1.onrender.com";
+
+async function healthCheck() {
+    try {
+        const response = await fetch(API_URL);
+        console.log(response?'running':'error');
+    } catch (error) {
+        console.error( error);
+    }
+}
+
+healthCheck();
+setInterval(healthCheck, 20_000);
+
+
 app.listen(5000, () => console.log(`Server running on 5000`));
