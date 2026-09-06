@@ -137,13 +137,27 @@ app.post("/api/posts", verifyToken, async (req, res) => {
   }
 });
 
-app.get("/api/posts", verifyToken, async (req, res) => {
-  try {
-    const posts = await Post.find().sort({ createdAt: -1 }).limit(50);
-    res.status(200).json(posts);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+app.get('/api/posts', verifyToken, async (req, res) => {
+    try {
+        const page = Math.max(1, parseInt(req.query.page) || 1);
+        const limit = Math.max(1, parseInt(req.query.limit) || 3);
+        const skip = (page - 1) * limit;
+
+        const posts = await Post.find()
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        const totalPosts = await Post.countDocuments();
+        const hasMore = skip + posts.length < totalPosts;
+
+        res.status(200).json({
+            posts,
+            hasMore
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 app.post("/api/posts/:id/like", verifyToken, async (req, res) => {
